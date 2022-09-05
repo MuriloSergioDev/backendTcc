@@ -1,0 +1,45 @@
+# Nome da Action
+name: "Deploy no Site Beta no push"
+on:
+  # Evento
+  push:
+    # Branches afetadas (nesse caso, apenas a "sitebeta")
+    branches:
+      - sitebeta
+  workflow_dispatch:
+    inputs:
+      sync:
+        description: "File synchronization"
+        required: true
+        # delta | full (delta sobe apenas as alterações)
+        default: "delta"
+
+# Tarefas
+jobs:
+  # Id da tarefa
+  deploy-beta:
+    name: "Deploy para o beta"
+
+    # Verifica se a branch atual é a "sitebeta" antes de executar as tarefas
+    if: ${{ github.ref == 'refs/heads/sitebeta' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout
+      - name: "Pega o código mais recente"
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      # Transferência
+      - name: "SFTP Deploy"
+        uses: milanmk/actions-file-deployer@master
+        with:
+          remote-protocol: "sftp"
+          remote-host: "sitebeta.com.br"
+          remote-user: "sitebeta"
+          # Adicione o secret da senha
+          remote-password: ${{ secrets.FTP_SITEBETA_PASS }}
+          # Altere o nome do diretório do projeto
+          remote-path: "/home/sitebeta/public_html/iced"
+          sync: "delta"
